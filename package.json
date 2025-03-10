@@ -43,39 +43,55 @@
           "type": "array",
           "default": [
             {
-              "label": "✨ feat",
-              "value": "✨ feat: "
+              "label": "feat: 新增功能",
+              "value": "✨feat: "
             },
             {
-              "label": "🐛 fix",
-              "value": "🐛 fix: "
+              "label": "fix: 修复Bug",
+              "value": "🐛fix: "
             },
             {
-              "label": "📚 docs",
-              "value": "📚 docs: "
+              "label": "chore: 非功能性更改",
+              "value": "🚀chore: "
             },
             {
-              "label": "💄 style",
-              "value": "💄 style: "
+              "label": "docs: 文档更新",
+              "value": "📚docs: "
             },
             {
-              "label": "♻️ refactor",
-              "value": "♻️ refactor: "
+              "label": "style: 样式修改",
+              "value": "💄style: "
             },
             {
-              "label": "✅ test",
-              "value": "✅ test: "
+              "label": "refactor: 代码重构",
+              "value": "♻️refactor: "
             },
             {
-              "label": "🚀 chore",
-              "value": "🚀 chore: "
+              "label": "test: 添加测试",
+              "value": "✅test: "
             },
             {
-              "label": "⏪️ revert",
-              "value": "⏪️ revert: "
+              "label": "ui: 界面样式调整",
+              "value": "🎨ui: "
+            },
+            {
+              "label": "build: 构建相关",
+              "value": "🔧build: "
+            },
+            {
+              "label": "ci: CI配置更改",
+              "value": "🔨ci: "
+            },
+            {
+              "label": "perf: 性能优化",
+              "value": "⚡️perf: "
+            },
+            {
+              "label": "revert: 回退更改",
+              "value": "⏪️revert: "
             }
           ],
-          "description": "自定义提交信息模板，每个模板包含label和value两个属性"
+          "description": "自定义提交信息模板，每个模板包含label（显示的文本）和value（实际提交的前缀）"
         }
       }
     }
