@@ -2,6 +2,7 @@
   "name": "git-commit-plugin",
   "displayName": "git-commit-plugin with vscode",
   "version": "1.0.0",
+  "icon": "resources/icon.png",
   "description": "一个帮助在Git提交时使用标准化提交信息模板的VSCode扩展",
   "publisher": "user",
   "engines": {
