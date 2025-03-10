@@ -1,26 +1,30 @@
 {
-  "name": "git-commit-plugin",
-  "displayName": "git-commit-plugin with vscode",
-  "version": "1.0.0",
+  "name": "git-commit-template-helper",
+  "displayName": "Git Commit Template Helper",
+  "version": "1.0.1",
   "icon": "resources/icon.png",
   "description": "一个帮助在Git提交时使用标准化提交信息模板的VSCode扩展",
-  "publisher": "user",
+  "publisher": "zhubin",
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.98.0"
   },
   "categories": [
     "SCM Providers",
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhubincode/git-commit-plugin-with-vscode"
+  },
   "activationEvents": [
-    "onCommand:git-commit-plugin.showCommitTemplates",
+    "onCommand:git-commit-template-helper.showCommitTemplates",
     "onView:scm"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "git-commit-plugin.showCommitTemplates",
+        "command": "git-commit-template-helper.showCommitTemplates",
         "title": "显示提交模板",
         "icon": {
           "light": "resources/light/commit.svg",
@@ -31,16 +35,16 @@
     "menus": {
       "scm/title": [
         {
-          "command": "git-commit-plugin.showCommitTemplates",
+          "command": "git-commit-template-helper.showCommitTemplates",
           "group": "navigation",
           "when": "scmProvider == git"
         }
       ]
     },
     "configuration": {
-      "title": "Git 提交插件",
+      "title": "Git 提交模板助手",
       "properties": {
-        "git-commit-plugin.commitTemplates": {
+        "git-commit-template-helper.commitTemplates": {
           "type": "array",
           "default": [
             {

@@ -16,14 +16,16 @@ interface CommitTemplate {
  */
 export function activate(context: vscode.ExtensionContext) {
   // 在控制台输出扩展激活信息
-  console.log("Git Commit Plugin is now active!");
+  console.log("Git Commit Template Helper is now active!");
 
   // 注册显示提交模板的命令
   const disposable = vscode.commands.registerCommand(
-    "git-commit-plugin.showCommitTemplates",
+    "git-commit-template-helper.showCommitTemplates",
     async () => {
       // 从配置中获取提交模板
-      const config = vscode.workspace.getConfiguration("git-commit-plugin");
+      const config = vscode.workspace.getConfiguration(
+        "git-commit-template-helper"
+      );
       const commitTemplates: CommitTemplate[] =
         config.get("commitTemplates") || [];
 

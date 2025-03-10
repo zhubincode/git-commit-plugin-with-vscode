@@ -1,4 +1,4 @@
-# Git Commit Plugin with VSCode
+# Git Commit Template Helper
 
 一个简单易用的 VSCode 扩展，帮助您在 Git 提交时使用标准化的提交信息模板。
 
@@ -13,7 +13,7 @@
 
 1. 打开 VSCode
 2. 按下`Ctrl+Shift+X`（Windows/Linux）或`Cmd+Shift+X`（macOS）打开扩展视图
-3. 搜索"git-commit-plugin with vscode"
+3. 搜索"Git Commit Template Helper"
 4. 点击"安装"按钮
 
 ## 使用方法
@@ -30,8 +30,8 @@
 ### 方式一：通过 VSCode 设置界面
 
 1. 打开 VSCode 设置（文件 > 首选项 > 设置）
-2. 搜索"git-commit-plugin"
-3. 编辑"Git 提交插件: Commit Templates"设置
+2. 搜索"git-commit-template-helper"
+3. 编辑"Git 提交模板助手: Commit Templates"设置
 
 ### 方式二：直接编辑 settings.json
 
@@ -41,7 +41,7 @@
 
 ```json
 {
-  "git-commit-plugin.commitTemplates": [
+  "git-commit-template-helper.commitTemplates": [
     {
       "label": "feat: 新增功能",
       "value": "✨feat: "
@@ -87,7 +87,7 @@
 
 ```json
 {
-  "git-commit-plugin.commitTemplates": [
+  "git-commit-template-helper.commitTemplates": [
     {
       "label": "feat: 新增功能",
       "value": "✨feat: "
@@ -127,8 +127,8 @@
 1. 克隆仓库
 
    ```bash
-   git clone https://github.com/yourusername/git-commit-plugin.git
-   cd git-commit-plugin
+   git clone https://github.com/yourusername/git-commit-template-helper.git
+   cd git-commit-template-helper
    ```
 
 2. 安装依赖
