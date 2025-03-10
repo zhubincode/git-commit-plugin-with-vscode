@@ -1,0 +1,108 @@
+{
+  "name": "git-commit-plugin",
+  "displayName": "git-commit-plugin with vscode",
+  "version": "1.0.0",
+  "description": "一个帮助在Git提交时使用标准化提交信息模板的VSCode扩展",
+  "publisher": "user",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:git-commit-plugin.showCommitTemplates",
+    "onView:scm"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "git-commit-plugin.showCommitTemplates",
+        "title": "显示提交模板",
+        "icon": {
+          "light": "resources/light/commit.svg",
+          "dark": "resources/dark/commit.svg"
+        }
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "git-commit-plugin.showCommitTemplates",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Git 提交插件",
+      "properties": {
+        "git-commit-plugin.commitTemplates": {
+          "type": "array",
+          "default": [
+            {
+              "label": "✨ feat",
+              "value": "✨ feat: "
+            },
+            {
+              "label": "🐛 fix",
+              "value": "🐛 fix: "
+            },
+            {
+              "label": "📚 docs",
+              "value": "📚 docs: "
+            },
+            {
+              "label": "💄 style",
+              "value": "💄 style: "
+            },
+            {
+              "label": "♻️ refactor",
+              "value": "♻️ refactor: "
+            },
+            {
+              "label": "✅ test",
+              "value": "✅ test: "
+            },
+            {
+              "label": "🚀 chore",
+              "value": "🚀 chore: "
+            },
+            {
+              "label": "⏪️ revert",
+              "value": "⏪️ revert: "
+            }
+          ],
+          "description": "自定义提交信息模板，每个模板包含label和value两个属性"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "template",
+    "vscode"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.13.10",
+    "@types/vscode": "^1.98.0",
+    "glob": "^7.2.0",
+    "mocha": "^11.1.0",
+    "typescript": "^5.8.2",
+    "vscode-test": "^1.6.1"
+  }
+}

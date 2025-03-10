@@ -1,0 +1,5 @@
+{
+  "git-commit-plugin.showCommitTemplates.title": "显示提交模板",
+  "git-commit-plugin.configuration.title": "Git 提交插件",
+  "git-commit-plugin.commitTemplates.description": "自定义提交信息模板，每个模板包含label和value两个属性"
+}
