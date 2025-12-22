@@ -1,12 +1,12 @@
 {
   "name": "git-commit-template-helper",
   "displayName": "Git Commit Template Helper",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "icon": "resources/icon.png",
   "description": "一个帮助在Git提交时使用标准化提交信息模板的VSCode扩展",
   "publisher": "zhubin",
   "engines": {
-    "vscode": "^1.98.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "SCM Providers",
@@ -120,7 +120,7 @@
     "@types/glob": "^7.2.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.13.10",
-    "@types/vscode": "^1.98.0",
+    "@types/vscode": "^1.74.0",
     "glob": "^7.2.0",
     "mocha": "^11.1.0",
     "typescript": "^5.8.2",
