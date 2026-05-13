@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 import { spawn } from 'child_process';
+
+const GIT_EXTENSION_ID = 'vscode.git'
+const GIT_EXTENSION_RETRY_TIMES = 5
+const GIT_EXTENSION_RETRY_DELAY = 150
 /**
  * 提交模板接口定义
  * @property label - 显示在选择列表中的文本
@@ -9,9 +13,48 @@ interface CommitTemplate {
   label: string;
   value: string;
 }
+
+/**
+ * Git 仓库最小接口定义，只保留当前插件会访问的字段。
+ */
+interface GitRepository {
+  inputBox: {
+    value: string;
+  };
+  state: {
+    HEAD?: {
+      name?: string;
+    };
+  };
+}
+
+/**
+ * Git API 最小接口定义，避免依赖宿主环境内部实现细节。
+ */
+interface GitApi {
+  repositories: GitRepository[];
+}
+
+/**
+ * Git 扩展导出接口定义。
+ */
+interface GitExtensionExports {
+  getAPI(version: 1): GitApi;
+}
+
+function getWorkspaceRootPath(): string | undefined {
+  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? vscode.workspace.rootPath;
+}
+
 export function runGitCommand(args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
-    const gitProcess = spawn('git', args, { cwd: vscode.workspace.rootPath });
+    const cwd = getWorkspaceRootPath()
+    if (!cwd) {
+      reject('未找到工作区目录')
+      return
+    }
+
+    const gitProcess = spawn('git', args, { cwd });
     let output = '';
     gitProcess.stdout.on('data', (data) => {
       output += data.toString();
@@ -30,6 +73,50 @@ export function runGitCommand(args: string[]): Promise<string> {
       }
     });
   });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function findGitExtension(): vscode.Extension<GitExtensionExports> | undefined {
+  const extension = vscode.extensions.getExtension<GitExtensionExports>(GIT_EXTENSION_ID)
+  if (extension) {
+    return extension
+  }
+
+  return vscode.extensions.all.find(
+    (item): item is vscode.Extension<GitExtensionExports> =>
+      item.id === GIT_EXTENSION_ID
+      || (item.packageJSON?.name === 'git' && item.packageJSON?.publisher === 'vscode')
+  )
+}
+
+async function getGitApi(): Promise<GitApi | undefined> {
+  let gitExtension: vscode.Extension<GitExtensionExports> | undefined
+
+  for (let i = 0; i < GIT_EXTENSION_RETRY_TIMES; i++) {
+    gitExtension = findGitExtension()
+    if (gitExtension) {
+      break
+    }
+
+    await sleep(GIT_EXTENSION_RETRY_DELAY)
+  }
+
+  if (!gitExtension) {
+    return
+  }
+
+  if (!gitExtension.isActive) {
+    await gitExtension.activate()
+  }
+
+  if (typeof gitExtension.exports?.getAPI !== 'function') {
+    return
+  }
+
+  return gitExtension.exports.getAPI(1)
 }
 /**
  * 扩展激活时调用的函数
@@ -62,28 +149,22 @@ export function activate(context: vscode.ExtensionContext) {
         placeHolder: "选择一个提交模板",
       }
     );
+    if (!selected) {
+      return
+    }
+
     const value = await vscode.window.showInputBox()
 
     if (!value) {
       vscode.window.showInformationMessage('请输入message')
+      return
     }
     // const status = await runGitCommand(['add', '.'])
 
-    const gitExtension = vscode.extensions.getExtension("vscode.git");
-    if (!gitExtension) {
-      vscode.window.showErrorMessage("未找到Git扩展");
-      return;
-    }
-
-    // 如果Git扩展未激活，则激活它
-    if (!gitExtension.isActive) {
-
-      await gitExtension.activate();
-    }
-    const git = gitExtension.exports.getAPI(1);
+    const git = await getGitApi()
     if (!git) {
-      vscode.window.showErrorMessage("未找到Git API");
-      return;
+      vscode.window.showErrorMessage("未找到 Git API，请确认已启用内置 Git 扩展。");
+      return
     }
     // 获取Git仓库列表
     const repositories = git.repositories;
@@ -94,6 +175,11 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
     const branch = repositories[0].state.HEAD?.name
+    if (!branch) {
+      vscode.window.showErrorMessage("未找到当前分支");
+      return
+    }
+
     try {
       await runGitCommand(['add', '.'])
       await runGitCommand(['commit', '-m', `${selected?.template.value || ''}${value}`])
@@ -141,23 +227,10 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      // 获取Git扩展
-      const gitExtension = vscode.extensions.getExtension("vscode.git");
-      if (!gitExtension) {
-        vscode.window.showErrorMessage("未找到Git扩展");
-        return;
-      }
-
-      // 如果Git扩展未激活，则激活它
-      if (!gitExtension.isActive) {
-
-        await gitExtension.activate();
-      }
-
       // 获取Git API
-      const git = gitExtension.exports.getAPI(1);
+      const git = await getGitApi()
       if (!git) {
-        vscode.window.showErrorMessage("未找到Git API");
+        vscode.window.showErrorMessage("未找到 Git API，请确认已启用内置 Git 扩展。");
         return;
       }
       // 获取Git仓库列表
