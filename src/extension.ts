@@ -170,4 +170,141 @@ async function getTargetRepository(
   const selected = await vscode.window.showQuickPick(
     repositories.map((repository) => ({
       label: repository.rootUri.fsPath.replace(/[\\/]+$/, "").split(/[\\/]/).pop()
-        || 
+        || repository.rootUri.fsPath,
+      description: repository.rootUri.fsPath,
+      repository,
+    })),
+    { placeHolder: "选择要填写提交信息的 Git 仓库", ignoreFocusOut: true }
+  );
+  return selected?.repository;
+}
+
+/**
+ * 扩展激活时调用的函数
+ * @param context - 扩展上下文，用于注册命令和事件
+ */
+export function activate(context: vscode.ExtensionContext) {
+  // 在控制台输出扩展激活信息
+  console.log("Git Commit Template Helper is now active!");
+  let disposable2 = vscode.commands.registerCommand('git-commit-template-helper.gitPush', async (arg1, arg2) => {
+
+    const config = vscode.workspace.getConfiguration(
+      "git-commit-template-helper"
+    );
+    const commitTemplates: CommitTemplate[] =
+      config.get("commitTemplates") || [];
+    if (commitTemplates.length === 0) {
+      vscode.window.showWarningMessage("没有配置提交模板。");
+      return;
+    }
+
+    // 显示快速选择菜单，列出所有提交模板
+
+    const selected = await vscode.window.showQuickPick(
+      commitTemplates.map((template) => ({
+        label: template.label,
+        description: template.value,
+        template,
+      })),
+      {
+        placeHolder: "选择一个提交模板",
+      }
+    );
+    if (!selected) {
+      return
+    }
+
+    const value = await vscode.window.showInputBox()
+
+    if (!value) {
+      vscode.window.showInformationMessage('请输入message')
+      return
+    }
+    // const status = await runGitCommand(['add', '.'])
+
+    const git = await getGitApi()
+    if (!git) {
+      vscode.window.showErrorMessage("未找到 Git API，请确认已启用内置 Git 扩展。");
+      return
+    }
+    // 获取Git仓库列表
+    const repositories = git.repositories;
+
+
+    if (!repositories.length) {
+      vscode.window.showErrorMessage("未找到Git仓库");
+      return;
+    }
+    const branch = repositories[0].state.HEAD?.name
+    if (!branch) {
+      vscode.window.showErrorMessage("未找到当前分支");
+      return
+    }
+
+    try {
+      await runGitCommand(['add', '.'])
+      await runGitCommand(['commit', '-m', `${selected?.template.value || ''}${value}`])
+      await runGitCommand(['push', 'origin', branch])
+      vscode.window.showInformationMessage(`push success:\n`)
+    } catch (error) {
+      vscode.window.showInformationMessage(`run git error:\n${error}`)
+    }
+
+
+  });
+
+  // context.subscriptions.push(disposable);
+  // 注册显示提交模板的命令
+  const disposable = vscode.commands.registerCommand(
+    "git-commit-template-helper.showCommitTemplates",
+    async (repositoryContext?: RepositoryContext | vscode.Uri) => {
+      /** 本次模板操作的目标仓库，在打开模板列表前确定。 */
+      const repository = await getTargetRepository(repositoryContext);
+      if (!repository) {
+        return;
+      }
+      // 从配置中获取提交模板
+      const config = vscode.workspace.getConfiguration(
+        "git-commit-template-helper"
+      );
+      const commitTemplates: CommitTemplate[] =
+        config.get("commitTemplates") || [];
+
+      // 如果没有配置提交模板，显示警告信息并返回
+      if (commitTemplates.length === 0) {
+        vscode.window.showWarningMessage("没有配置提交模板。");
+        return;
+      }
+
+      // 显示快速选择菜单，列出所有提交模板
+      const selected = await vscode.window.showQuickPick(
+        commitTemplates.map((template) => ({
+          label: template.label,
+          description: template.value,
+          template,
+        })),
+        {
+          placeHolder: "选择一个提交模板",
+        }
+      );
+
+      // 如果用户没有选择任何模板，直接返回
+      if (!selected) {
+        return;
+      }
+
+      // 将选择的模板填充到提交信息输入框中
+      repository.inputBox.value = selected.template.value;
+    }
+  );
+
+  // 将命令添加到扩展上下文的订阅中，以便在扩展停用时自动释放资源
+  context.subscriptions.push(disposable);
+  context.subscriptions.push(disposable2)
+}
+
+/**
+ * 扩展停用时调用的函数
+ * 目前没有需要清理的资源，所以函数体为空
+ */
+export function deactivate() { }
