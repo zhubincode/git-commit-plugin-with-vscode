@@ -18,6 +18,8 @@ interface CommitTemplate {
  * Git 仓库最小接口定义，只保留当前插件会访问的字段。
  */
 interface GitRepository {
+  /** 仓库根目录，用于匹配源代码管理入口。 */
+  rootUri: vscode.Uri;
   inputBox: {
     value: string;
   };
@@ -40,6 +42,17 @@ interface GitApi {
  */
 interface GitExtensionExports {
   getAPI(version: 1): GitApi;
+}
+
+/** 模板命令接收的仓库或源代码管理上下文。 */
+interface RepositoryContext {
+  /** 直接传入的仓库根目录。 */
+  rootUri?: vscode.Uri;
+  /** 仓库对象携带的源代码管理入口。 */
+  sourceControl?: {
+    /** 源代码管理入口对应的仓库根目录。 */
+    rootUri?: vscode.Uri;
+  };
 }
 
 function getWorkspaceRootPath(): string | undefined {
@@ -118,6 +131,54 @@ async function getGitApi(): Promise<GitApi | undefined> {
 
   return gitExtension.exports.getAPI(1)
 }
+
+/** 优先匹配命令入口的仓库；多仓库且无上下文时由用户选择。 */
+async function getTargetRepository(
+  context?: RepositoryContext | vscode.Uri
+): Promise<GitRepository | undefined> {
+  const git = await getGitApi();
+  if (!git) {
+    vscode.window.showErrorMessage("未找到 Git API，请确认已启用内置 Git 扩展。");
+    return;
+  }
+
+  const repositories = git.repositories;
+  if (!repositories.length) {
+    vscode.window.showErrorMessage("未找到Git仓库");
+    return;
+  }
+
+  /** 从仓库、源代码管理对象或直接传入的 URI 中获取目标路径。 */
+  const uri = context instanceof vscode.Uri
+    ? context
+    : context?.rootUri ?? context?.sourceControl?.rootUri;
+  if (uri) {
+    const repository = repositories.find(
+      (item) => item.rootUri.toString() === uri.toString()
+    );
+    if (repository) {
+      return repository;
+    }
+    vscode.window.showWarningMessage("未找到指定的 Git 仓库，请重新选择仓库。");
+    return;
+  }
+
+  if (repositories.length === 1) {
+    return repositories[0];
+  }
+
+  const selected = await vscode.window.showQuickPick(
+    repositories.map((repository) => ({
+      label: repository.rootUri.fsPath.replace(/[\\/]+$/, "").split(/[\\/]/).pop()
+        || repository.rootUri.fsPath,
+      description: repository.rootUri.fsPath,
+      repository,
+    })),
+    { placeHolder: "选择要填写提交信息的 Git 仓库", ignoreFocusOut: true }
+  );
+  return selected?.repository;
+}
+
 /**
  * 扩展激活时调用的函数
  * @param context - 扩展上下文，用于注册命令和事件
@@ -196,7 +257,12 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册显示提交模板的命令
   const disposable = vscode.commands.registerCommand(
     "git-commit-template-helper.showCommitTemplates",
-    async () => {
+    async (repositoryContext?: RepositoryContext | vscode.Uri) => {
+      /** 本次模板操作的目标仓库，在打开模板列表前确定。 */
+      const repository = await getTargetRepository(repositoryContext);
+      if (!repository) {
+        return;
+      }
       // 从配置中获取提交模板
       const config = vscode.workspace.getConfiguration(
         "git-commit-template-helper"
@@ -226,22 +292,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (!selected) {
         return;
       }
-
-      // 获取Git API
-      const git = await getGitApi()
-      if (!git) {
-        vscode.window.showErrorMessage("未找到 Git API，请确认已启用内置 Git 扩展。");
-        return;
-      }
-      // 获取Git仓库列表
-      const repositories = git.repositories;
-      if (!repositories.length) {
-        vscode.window.showErrorMessage("未找到Git仓库");
-        return;
-      }
-
-      // 使用第一个仓库（最常见的情况）
-      const repository = repositories[0];
 
       // 将选择的模板填充到提交信息输入框中
       repository.inputBox.value = selected.template.value;
